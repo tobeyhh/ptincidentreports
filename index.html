@@ -989,8 +989,8 @@
       if (s.restraint) sp += ` We ${s.restraint}.`;
       if (hoName || hoSerial) {
         const serial = hoSerial ? `, serial number #${hoSerial}` : '';
-        const officer = hoName ? `${hoName}${serial}` : `the attending deputy${serial}`;
-        sp += ` The subject was then walked over to ${officer}.`;
+        const officer = hoName ? `${hoName}${serial}` : `the attending law enforcement official${serial}`;
+        sp += ` The subject was handed over to ${officer}.`;
       }
       parts.push(sp);
     });
