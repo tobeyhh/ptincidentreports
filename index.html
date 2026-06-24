@@ -977,8 +977,8 @@
     suspects.forEach((s, i) => {
       if (!s.desc && !s.action) return;
       const descStr = s.clothing
-        ? `${s.desc || 'The suspect an individual'}, wearing ${s.clothing}`
-        : (s.desc || 'The suspect an individual');
+        ? `${s.desc || 'an individual'}, wearing ${s.clothing},`
+        : (s.desc || 'an individual');
       let sp = i === 0 ? cap(descStr) : `Subsequently, ${descStr}`;
       if (s.action) sp += ` ${s.action}`;
       if (s.direction) sp += `, ${s.direction}`;
