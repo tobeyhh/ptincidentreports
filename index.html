@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProTech Security — Incident Narrative Builder</title>
+<style>
+  :root {
+    --bg: #0d0d14;
+    --surface: #13131f;
+    --surface2: #1a1a2a;
+    --border: rgba(255,255,255,0.07);
+    --border-mid: rgba(255,255,255,0.12);
+    --text: #e8e8f0;
+    --text-muted: #6b6b88;
+    --text-dim: #9898b8;
+    --accent: #7c5cbf;
+    --accent-glow: rgba(124,92,191,0.15);
+    --accent-light: #a98be0;
+    --green: #3b8c5a;
+    --green-bg: rgba(59,140,90,0.12);
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* Layout */
+  .shell {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: 100vh;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 28px 20px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 32px;
+  }
+
+  .brand-mark {
+    width: 34px;
+    height: 34px;
+    background: var(--accent);
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: .05em;
+    flex-shrink: 0;
+  }
+
+  .brand-text { line-height: 1.2; }
+  .brand-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .brand-sub { font-size: 11px; color: var(--text-muted); }
+
+  .agent-selector {
+    margin-bottom: 28px;
+  }
+
+  .agent-selector label {
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .agent-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 13px;
+    margin-bottom: 6px;
+    text-align: left;
+    transition: all .15s;
+  }
+
+  .agent-btn:hover { border-color: var(--border-mid); color: var(--text); background: var(--surface2); }
+
+  .agent-btn.active {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+    color: var(--text);
+  }
+
+  .agent-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border-mid);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--accent-light);
+    flex-shrink: 0;
+  }
+
+  .agent-info { line-height: 1.3; }
+  .agent-info strong { display: block; font-size: 12px; font-weight: 500; }
+  .agent-info span { font-size: 11px; color: var(--text-muted); }
+
+  .nav-section {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    margin-top: 24px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: var(--radius);
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    margin-bottom: 2px;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    transition: all .15s;
+  }
+
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+  .nav-item .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--border-mid); flex-shrink: 0; }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* Main content */
+  .main {
+    padding: 36px 40px;
+    max-width: 820px;
+  }
+
+  .page-header {
+    margin-bottom: 32px;
+  }
+
+  .page-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent-light);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .page-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .page-desc { font-size: 13px; color: var(--text-muted); }
+
+  /* Sections */
+  .section { margin-bottom: 28px; }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+  }
+
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .g2:last-child, .g3:last-child { margin-bottom: 0; }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+
+  .field label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: .02em;
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 13px;
+    padding: 8px 11px;
+    width: 100%;
+    font-family: inherit;
+    transition: border-color .15s;
+  }
+
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .field select { cursor: pointer; }
+  .field textarea { resize: vertical; min-height: 70px; line-height: 1.6; }
+
+  .field input::placeholder { color: var(--text-muted); }
+
+  /* Sub-cards for partners/suspects */
+  .sub-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+
+  .sub-card:last-child { margin-bottom: 0; }
+
+  .sub-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .sub-head-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent-light);
+    letter-spacing: .05em;
+    text-transform: uppercase;
+  }
+
+  .del-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text-muted);
+    font-size: 14px;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .15s;
+  }
+
+  .del-btn:hover { border-color: #c0392b; color: #c0392b; }
+
+  .sub-card .field input,
+  .sub-card .field select {
+    background: var(--surface);
+  }
+
+  /* Add button */
+  .add-btn {
+    width: 100%;
+    padding: 9px;
+    border: 1px dashed var(--border-mid);
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all .15s;
+    font-family: inherit;
+  }
+
+  .add-btn:hover { border-color: var(--accent); color: var(--accent-light); background: var(--accent-glow); }
+
+  /* Toggle chips */
+  .chip-row { display: flex; flex-wrap: wrap; gap: 7px; }
+
+  .chip {
+    padding: 5px 13px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all .15s;
+    user-select: none;
+  }
+
+  .chip:hover { border-color: var(--border-mid); color: var(--text); }
+  .chip.on { border-color: var(--accent); background: var(--accent-glow); color: var(--accent-light); }
+
+  /* Output */
+  .output-section { margin-top: 32px; }
+
+  .output-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px 22px;
+    font-family: 'Courier New', 'Consolas', monospace;
+    font-size: 13px;
+    line-height: 1.85;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+    min-height: 120px;
+  }
+
+  .output-placeholder { color: var(--text-muted); font-style: italic; font-family: inherit; }
+
+  .btn-row { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 20px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-mid);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all .15s;
+  }
+
+  .btn:hover { background: var(--surface2); border-color: var(--border-mid); }
+
+  .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .btn-primary:hover { background: #6a4daa; border-color: #6a4daa; }
+  .btn-primary.copied { background: var(--green); border-color: var(--green); }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: var(--green);
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all .2s;
+    pointer-events: none;
+    z-index: 999;
+  }
+
+
+
+  
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* Responsive */
+  @media (max-width: 780px) {
+    .shell { grid-template-columns: 1fr; }
+    .sidebar { position: static; height: auto; }
+    .main { padding: 24px 20px; }
+    .g2, .g3 { grid-template-columns: 1fr; }
+  }
+
+  select option { background: #1a1a2a; color: #e8e8f0; }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">PT</div>
+      <div class="brand-text">
+        <div class="brand-name">ProTech Security</div>
+        <div class="brand-sub">Narrative Builder</div>
+      </div>
+    </div>
+
+    <div class="agent-selector">
+      <label>Active Agent</label>
+      <button class="agent-btn active" onclick="selectAgent('dominic', this)">
+        <div class="agent-avatar">DG</div>
+        <div class="agent-info">
+          <strong>Dominic Gallagher</strong>
+          <span>Badge #103</span>
+        </div>
+      </button>
+      <button class="agent-btn" onclick="selectAgent('mara', this)">
+        <div class="agent-avatar">ML</div>
+        <div class="agent-info">
+          <strong>Mara Locke</strong>
+          <span>Badge #598 · Asst. Director</span>
+        </div>
+      </button>
+    </div>
+
+    <div class="nav-section">Sections</div>
+    <button class="nav-item" onclick="scrollTo('sec-dispatch')"><span class="dot"></span> Dispatch & Call</button>
+    <button class="nav-item" onclick="scrollTo('sec-unit')"><span class="dot"></span> Responding Unit</button>
+    <button class="nav-item" onclick="scrollTo('sec-arrival')"><span class="dot"></span> Arrival & Scene</button>
+    <button class="nav-item" onclick="scrollTo('sec-le')"><span class="dot"></span> Law Enforcement</button>
+    <button class="nav-item" onclick="scrollTo('sec-suspects')"><span class="dot"></span> Subjects</button>
+    <button class="nav-item" onclick="scrollTo('sec-resolution')"><span class="dot"></span> Resolution</button>
+    <button class="nav-item" onclick="scrollTo('sec-output')"><span class="dot"></span> Output</button>
+
+    <div class="sidebar-footer">
+      ProTech Security Solutions<br>
+      Internal Use Only — Confidential
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <div class="page-header">
+      <div class="page-eyebrow">PROTECH SECURITY Incident Documentation</div>
+      <div class="page-title">Narrative Builder</div>
+      <div class="page-desc">Fill in the fields below. Your report generates live and is ready to copy.</div>
+    </div>
+
+    <!-- Dispatch -->
+    <div class="section" id="sec-dispatch">
+      <div class="section-label">Dispatch &amp; Call</div>
+      <div class="card">
+        <div class="g3">
+          <div class="field">
+            <label>Time of Call (24h)</label>
+            <input id="calltime" placeholder="e.g. 1800 hrs" oninput="build()">
+          </div>
+          <div class="field">
+            <label>Trigger</label>
+            <select id="trigger" onchange="onTriggerChange()">
+              <option value="an alarm was activated">Alarm Activation</option>
+              <option value="an alarm was activated">Burglary</option>              
+              <option value="a disturbance was reported">Disturbance</option>
+              <option value="a trespassing complaint was received">Trespassing</option>
+              <option value="suspicious activity was reported">Suspicious Activity</option>
+              <option value="a theft was reported">Theft reported</option>
+              <option value="a request for security assistance was made">Security assistance</option>
+              <option value="[CUSTOM]">Custom...</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Address / Location</label>
+            <input id="address" placeholder="e.g. 1121 North Sheldon Avenue" oninput="build()">
+          </div>
+        </div>
+        <div id="custom-trigger-wrap" style="display:none">
+          <div class="field">
+            <label>Custom trigger phrase</label>
+            <input id="custom-trigger" placeholder="e.g. a welfare check was requested" oninput="build()">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Unit -->
+    <div class="section" id="sec-unit">
+      <div class="section-label">Responding Unit</div>
+      <div class="card">
+        <div class="g3">
+          <div class="field">
+            <label>Primary Agent</label>
+            <input id="agent1" placeholder="Auto-filled from sidebar" oninput="build()">
+          </div>
+          <div class="field">
+            <label>Badge #</label>
+            <input id="badge1" placeholder="Auto-filled" oninput="build()">
+          </div>
+          <div class="field">
+            <label>Unit Callsign</label>
+            <input id="unit" placeholder="e.g. PT130" oninput="build()">
+          </div>
+        </div>
+        <div class="g3">
+        <div class="field">
+            <label>Rank</label>
+            <input id="from" placeholder="Senior Security Officer" oninput="build()">
+          </div>
+          <div class="field">
+            <label>Dispatched From</label>
+            <input id="from" placeholder="e.g. Tongva Valley" oninput="build()">
+          </div>
+          <div class="field">
+            <label>Patrol Type</label>
+            <select id="patroltype" onchange="build()">
+              <option>routine patrol</option>
+              <option>directed patrol</option>
+              <option>rapid response</option>
+              <option>scheduled site check</option>
+            </select>
+          </div>
+        </div>
+        <div id="partners-wrap"></div>
+        <button class="add-btn" onclick="addPartner()">+ Add partner / backup</button>
+      </div>
+    </div>
+
+    <!-- Arrival -->
+    <div class="section" id="sec-arrival">
+      <div class="section-label">Arrival &amp; Scene</div>
+      <div class="card">
+        <div class="g2">
+          <div class="field">
+            <label>Property Type</label>
+            <select id="proptype" onchange="build()">
+              <option>residential property</option>
+              <option>commercial property</option>
+              <option>industrial site</option>
+              <option>parking structure</option>
+              <option>retail premises</option>
+              <option>vacant lot</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Unit Positioning</label>
+            <input id="position" placeholder="e.g. southeast, facing the entrance and garage" oninput="build()">
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:14px;">
+          <label>Vehicle Present</label>
+          <div style="display:flex; gap:20px; flex-wrap:wrap; margin-top:8px;">
+            <label><input type="checkbox" id="veh-car" onchange="vehicleTypeChanged('car')"> Car</label>
+            <label><input type="checkbox" id="veh-bike" onchange="vehicleTypeChanged('motorbike')"> Motorbike</label>
+            <label><input type="checkbox" id="veh-bicycle" onchange="vehicleTypeChanged('bicycle')"> Bicycle</label>
+          </div>
+        </div>
+
+        <div id="vehicle-fields" style="display:none;">
+          <div class="g3">
+            <div class="field">
+              <label>Vehicle Color</label>
+              <input id="veh-color" placeholder="e.g. DARK BLUE" oninput="build()">
+            </div>
+            <div class="field">
+              <label>Vehicle Make / Model</label>
+              <input id="veh-make" placeholder="e.g. AESTEROPE" oninput="build()">
+            </div>
+            <div class="field" id="plate-field">
+              <label>Plate / Index</label>
+              <input id="veh-plate" placeholder="e.g. JPD469" oninput="build()">
+            </div>
+          </div>
+          <div class="field">
+            <label>Vehicle Status</label>
+            <select id="veh-status" onchange="build()">
+              <option value="parked with the engine running">Parked — engine running</option>
+              <option value="parked and unoccupied">Parked — unoccupied</option>
+              <option value="parked and occupied">Parked — occupied</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LE -->
+    <div class="section" id="sec-le">
+      <div class="section-label">Law Enforcement on Scene</div>
+      <div class="card">
+        <div class="chip-row" style="margin-bottom:14px">
+          <button class="chip" id="tog-le" onclick="toggleLE(this)">LEO was present on arrival</button>
+        </div>
+        <div id="le-fields" style="display:none">
+          <div class="g2">
+            <div class="field">
+              <label>Agency</label>
+              <select id="le-agency" onchange="build()">
+                <option>LSPD</option>
+                <option>LSSD</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>What were they doing on arrival?</label>
+              <input id="le-action" placeholder="e.g. clearing the back of the house" oninput="build()">
+            </div>
+          </div>
+          <div class="g2" style="margin-top:12px">
+            <div class="field">
+              <label>LEO Contact</label>
+              <input id="le-contact" placeholder="e.g. Deputy Cole" oninput="build()">
+            </div>
+            <div class="field">
+              <label>Info they provided</label>
+              <input id="le-info" placeholder="e.g. Detective pursuing a suspect to the rear" oninput="build()">
+            </div>
+          </div>
+          <div class="field" style="margin-top:12px">
+            <label>ProTech response to that info</label>
+            <input id="le-response" placeholder="e.g. We acknowledged and did not pursue — off-limits" oninput="build()">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Suspects -->
+    <div class="section" id="sec-suspects">
+      <div class="section-label">Subjects / Suspects</div>
+      <div id="suspects-wrap"></div>
+      <button class="add-btn" onclick="addSuspect()">+ Add subject / suspect</button>
+    </div>
+
+    <!-- Resolution -->
+    <div class="section" id="sec-resolution">
+      <div class="section-label">Resolution &amp; Closing</div>
+      <div class="card">
+        <div class="g2">
+          <div class="field">
+            <label>Handoff Contact Name</label>
+            <input id="ho-name" placeholder="e.g. Deputy Navarro" oninput="build()">
+          </div>
+          <div class="field">
+            <label>Handoff Contact Serial #</label>
+            <input id="ho-serial" placeholder="e.g. 212220" oninput="build()">
+          </div>
+        </div>
+        <div style="margin-top:14px">
+          <div class="field" style="margin-bottom:8px"><label>Closing statements</label></div>
+          <div class="chip-row" id="close-chips">
+            <button class="chip" onclick="togClose(this)" data-val="The property's door was secured with an electronic padlock">Door secured (padlock)</button>
+            <button class="chip" onclick="togClose(this)" data-val="the electronic padlock code was sent to the client">Padlock Code sent</button>
+            <button class="chip" onclick="togClose(this)" data-val="The owner was notified on PTS">Client notified</button>
+            <button class="chip" onclick="togClose(this)" data-val="none of our personnel were injured or harmed throughout the incident">No injuries to personnel</button>
+            <button class="chip" onclick="togClose(this)" data-val="no property damage was sustained">No property damage</button>
+            <button class="chip" onclick="togClose(this)" data-val="the client was present on scene">Client on scene</button>
+            <button class="chip" onclick="togClose(this)" data-val="all ProTech units cleared the scene">All units cleared</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Output -->
+    <div class="output-section" id="sec-output">
+      <div class="section-label">Narrative Output</div>
+      <div class="output-box" id="output-box"><span class="output-placeholder">Fill in the fields above — your narrative will appear here.</span></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="copy-btn" onclick="copyOut()">&#x2398; Copy to clipboard</button>
+        <button class="btn" onclick="clearAll()">&#x21BA; Clear all fields</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast">Copied to clipboard</div>
+
+<script>
+  let lePresent = false;
+  let partners = [];
+  let suspects = [];
+  let closeFlags = [];
+  let vehicleType = '';
+
+  const AGENTS = {
+    dominic: { name: 'Dominic Gallagher', badge: '103', title: 'Senior Security Officer' },
+    mara:    { name: 'Mara Locke',         badge: '598', title: 'Assistant Director of Technical Services' }
+  };
+
+  let activeAgent = 'dominic';
+
+  function selectAgent(key, btn) {
+    activeAgent = key;
+    document.querySelectorAll('.agent-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const a = AGENTS[key];
+    document.getElementById('agent1').value = a.name;
+    document.getElementById('badge1').value = a.badge;
+    build();
+  }
+
+  function gv(id) { return (document.getElementById(id) || {}).value || ''; }
+
+  function scrollTo(id) {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function onTriggerChange() {
+    const val = gv('trigger');
+    document.getElementById('custom-trigger-wrap').style.display = val === '[CUSTOM]' ? 'block' : 'none';
+    build();
+  }
+
+  function toggleLE(btn) {
+    lePresent = !lePresent;
+    btn.classList.toggle('on', lePresent);
+    document.getElementById('le-fields').style.display = lePresent ? 'block' : 'none';
+    build();
+  }
+
+  function vehicleTypeChanged(type) {
+    vehicleType = type;
+
+    document.getElementById('veh-car').checked = type === 'car';
+    document.getElementById('veh-bike').checked = type === 'motorbike';
+    document.getElementById('veh-bicycle').checked = type === 'bicycle';
+
+    document.getElementById('vehicle-fields').style.display = 'block';
+
+    if (type === 'bicycle') {
+      document.getElementById('plate-field').style.display = 'none';
+    } else {
+      document.getElementById('plate-field').style.display = 'block';
+    }
+
+    build();
+  }
+
+  function togClose(btn) {
+    const val = btn.dataset.val;
+    if (closeFlags.includes(val)) {
+      closeFlags = closeFlags.filter(x => x !== val);
+      btn.classList.remove('on');
+    } else {
+      closeFlags.push(val);
+      btn.classList.add('on');
+    }
+    build();
+  }
+
+  /* Partners */
+  function addPartner() {
+    partners.push({ id: Date.now(), name: '', badge: '' });
+    renderPartners();
+    build();
+  }
+
+  function removePartner(id) {
+    partners = partners.filter(p => p.id !== id);
+    renderPartners();
+    build();
+  }
+
+  function renderPartners() {
+    document.getElementById('partners-wrap').innerHTML = partners.map(p => `
+      <div class="sub-card" style="margin-top:10px">
+        <div class="sub-head">
+          <span class="sub-head-label">Partner / Backup</span>
+          <button class="del-btn" onclick="removePartner(${p.id})">×</button>
+        </div>
+        <div class="g2">
+          <div class="field"><label>Name</label><input value="${p.name}" placeholder="e.g. Catalina Blackwood" onchange="setP(${p.id},'name',this.value)"></div>
+          <div class="field"><label>Badge #</label><input value="${p.badge}" placeholder="e.g. 568" onchange="setP(${p.id},'badge',this.value)"></div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function setP(id, k, v) {
+    const p = partners.find(x => x.id === id);
+    if (p) p[k] = v;
+    build();
+  }
+
+  /* Suspects */
+  function addSuspect() {
+    suspects.push({ id: Date.now(), desc: '', clothing: '', action: '', direction: '', chaser: '', outcome: 'tackled and detained', restraint: '' });
+    renderSuspects();
+    build();
+  }
+
+  function removeSuspect(id) {
+    suspects = suspects.filter(s => s.id !== id);
+    renderSuspects();
+    build();
+  }
+
+  function renderSuspects() {
+    const wrap = document.getElementById('suspects-wrap');
+    if (!suspects.length) { wrap.innerHTML = ''; return; }
+    wrap.innerHTML = suspects.map((s, i) => `
+      <div class="card" style="margin-bottom:10px">
+        <div class="sub-head">
+          <span class="sub-head-label">Subject ${i + 1}</span>
+          <button class="del-btn" onclick="removeSuspect(${s.id})">×</button>
+        </div>
+        <div class="g2">
+          <div class="field"><label>Description / name</label><input value="${s.desc}" placeholder="e.g. male in a mask" onchange="setSus(${s.id},'desc',this.value)"></div>
+          <div class="field"><label>Clothing</label><input value="${s.clothing}" placeholder="e.g. white/orange jacket, blue pants, white shoes, duffel bag" onchange="setSus(${s.id},'clothing',this.value)"></div>
+        </div>
+        <div class="g2" style="margin-top:12px">
+          <div class="field"><label>Initial action</label><input value="${s.action}" placeholder="e.g. exited the property and proceeded to flee west on foot" onchange="setSus(${s.id},'action',this.value)"></div>
+          <div class="field"><label>Direction of travel</label><input value="${s.direction}" placeholder="e.g. heading west on the road" onchange="setSus(${s.id},'direction',this.value)"></div>
+        </div>
+        <div class="g2" style="margin-top:12px">
+          <div class="field"><label>Who pursued (name + badge)</label><input value="${s.chaser}" placeholder="e.g. Catalina Blackwood #568" onchange="setSus(${s.id},'chaser',this.value)"></div>
+          <div class="field"><label>Outcome</label>
+            <select onchange="setSus(${s.id},'outcome',this.value)">
+              ${['tackled and detained','detained without resistance','handed to LEO','fled — not apprehended','subject cooperated','subject identified and released'].map(o => `<option ${s.outcome===o?'selected':''}>${o}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="field" style="margin-top:12px">
+          <label>Restraint applied</label>
+          <select onchange="setSus(${s.id},'restraint',this.value)">
+            <option value="">None</option>
+            <option value="ziptied his wrists" ${s.restraint==='ziptied his wrists'?'selected':''}>Zipties</option>
+            <option value="handcuffs applied" ${s.restraint==='handcuffs applied'?'selected':''}>Handcuffs</option>
+            <option value="subject restrained by law enforcement" ${s.restraint==='subject restrained by law enforcement'?'selected':''}>Restrained by LEO</option>
+          </select>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function setSus(id, k, v) {
+    const s = suspects.find(x => x.id === id);
+    if (s) s[k] = v;
+    build();
+  }
+
+  function cap(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
+
+  function build() {
+    const time      = gv('calltime') || '[TIME]';
+    const triggerV  = gv('trigger');
+    const trigger   = triggerV === '[CUSTOM]' ? (gv('custom-trigger') || '[trigger]') : triggerV;
+    const address   = gv('address')   || '[address]';
+    const agent1    = gv('agent1')    || '[Agent]';
+    const badge1    = gv('badge1');
+    const unit      = gv('unit')      || '[Unit]';
+    const from      = gv('from')      || '[location]';
+    const patrol    = gv('patroltype');
+    const proptype  = gv('proptype');
+    const position  = gv('position');
+    const vColor    = gv('veh-color');
+    const vMake     = gv('veh-make');
+    const vPlate    = gv('veh-plate');
+    const vStatus   = gv('veh-status');
+    const hoName    = gv('ho-name');
+    const hoSerial  = gv('ho-serial');
+    const extraClose= gv('extra-close');
+
+    const a1full = badge1 ? `${agent1} #${badge1}` : agent1;
+    const pList  = partners.filter(p => p.name);
+
+    let parts = [];
+
+    // P1 — dispatch
+    let p1 = `At approximately ${time} hours, ${trigger} at ${address}.`;
+    let respond = `I, ${a1full}`;
+    if (pList.length) respond += ', along with ' + pList.map(p => p.badge ? `${p.name} #${p.badge}` : p.name).join(' and ');
+    respond += `, responded under ${unit} from ${from} during our ${patrol}.`;
+    p1 += ' ' + respond;
+    parts.push(p1);
+
+    // P2 — arrival
+    let p2 = `Upon our arrival at the ${proptype}`;
+    if (position) p2 += `, we positioned the vehicle towards the ${position}`;
+    p2 += '.';
+
+    if (vehicleType) {
+      const vDesc = [vColor, vMake].filter(Boolean).join(' ');
+
+      if (vehicleType === 'bicycle') {
+        p2 += ` A bicycle${vDesc ? ` described as ${vDesc}` : ''} was observed ${vStatus}.`;
+      } else if (vehicleType === 'motorbike') {
+        p2 += ` A motorbike${vDesc ? ` described as ${vDesc}` : ''}${vPlate ? `, INDEX ${vPlate}` : ''} was observed ${vStatus}.`;
+      } else {
+        p2 += ` A ${vDesc}${vPlate ? `, INDEX ${vPlate}` : ''} was observed ${vStatus}.`;
+      }
+    }
+
+    parts.push(p2);
+
+    // P3 — LE
+    if (lePresent) {
+      const agency   = gv('le-agency')   || 'Law Enforcement';
+      const leAction = gv('le-action');
+      const leContact= gv('le-contact');
+      const leInfo   = gv('le-info');
+      const leResp   = gv('le-response');
+      let p3 = `Before our arrival, ${agency} members were already on scene`;
+      if (leAction) p3 += ` and were ${leAction}`;
+      p3 += '.';
+      if (leContact || leInfo) {
+        p3 += ' ';
+        if (leContact) p3 += `${leContact} made contact with us`;
+        if (leInfo) p3 += (leContact ? ' and informed us of ' : 'We were informed of ') + leInfo + '.';
+      }
+      if (leResp) p3 += ' ' + cap(leResp) + '.';
+      parts.push(p3);
+    }
+
+    // Suspects
+    suspects.forEach((s, i) => {
+      if (!s.desc && !s.action) return;
+      const descStr = s.clothing
+        ? `${s.desc || 'an individual'}, wearing ${s.clothing},`
+        : (s.desc || 'an individual');
+      let sp = i === 0 ? cap(descStr) : `Subsequently, ${descStr}`;
+      if (s.action) sp += ` ${s.action}`;
+      if (s.direction) sp += `, ${s.direction}`;
+      sp += '.';
+      if (s.chaser) sp += ` ${s.chaser} gave chase immediately after.`;
+      if (s.outcome && !s.outcome.includes('fled')) {
+        sp += ` The subject was ${s.outcome}.`;
+      } else if (s.outcome && s.outcome.includes('fled')) {
+        sp += ` The subject fled and was not apprehended.`;
+      }
+      if (s.restraint) sp += ` We ${s.restraint}.`;
+      if (hoName || hoSerial) {
+        const serial = hoSerial ? `, serial number #${hoSerial}` : '';
+        const officer = hoName ? `${hoName}${serial}` : `the attending deputy${serial}`;
+        sp += ` The subject was then walked over to ${officer}.`;
+      }
+      parts.push(sp);
+    });
+
+    // Closing
+    const allClose = [...closeFlags];
+    if (extraClose.trim()) allClose.push(extraClose.trim());
+    if (allClose.length) {
+      let closing = cap(allClose[0]);
+      for (let i = 1; i < allClose.length; i++) {
+    closing += (i === allClose.length - 1 ? ', ' : ', ') + allClose[i];
+      }
+      closing += '.';
+      parts.push(closing);
+    }
+
+    const box = document.getElementById('output-box');
+    if (parts.length) {
+      box.textContent = parts.join('\n\n');
+    } else {
+      box.innerHTML = '<span class="output-placeholder">Fill in the fields above — your narrative will appear here.</span>';
+    }
+  }
+
+  function copyOut() {
+    const text = document.getElementById('output-box').textContent;
+    if (!text || text.includes('Fill in the fields')) return;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('copy-btn');
+      btn.textContent = '✓ Copied!';
+      btn.classList.add('copied');
+      showToast();
+      setTimeout(() => {
+        btn.textContent = '⎘ Copy to clipboard';
+        btn.classList.remove('copied');
+      }, 2500);
+    });
+  }
+
+  function showToast() {
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  function clearAll() {
+    document.querySelectorAll('input').forEach(i => i.value = '');
+    document.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
+    partners = []; suspects = []; closeFlags = []; lePresent = false; vehicleType = '';
+    document.getElementById('le-fields').style.display = 'none';
+    document.getElementById('tog-le').classList.remove('on');
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+    document.getElementById('partners-wrap').innerHTML = '';
+    document.getElementById('suspects-wrap').innerHTML = '';
+    document.getElementById('custom-trigger-wrap').style.display = 'none';
+    const a = AGENTS[activeAgent];
+    document.getElementById('agent1').value = a.name;
+    document.getElementById('badge1').value = a.badge;
+    build();
+  }
+
+  // Init
+  window.addEventListener('DOMContentLoaded', () => {
+    const a = AGENTS[activeAgent];
+    document.getElementById('agent1').value = a.name;
+    document.getElementById('badge1').value = a.badge;
+    build();
+  });
+</script>
+
+</body>
+</html>
