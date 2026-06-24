@@ -708,6 +708,7 @@
             <button class="chip" onclick="togClose(this)" data-val="none of our personnel were injured or harmed throughout the incident">No injuries to personnel</button>
             <button class="chip" onclick="togClose(this)" data-val="no property damage was sustained">No property damage</button>
             <button class="chip" onclick="togClose(this)" data-val="the client was present on scene">Client on scene</button>
+            <button class ="chip" onclick="togClose(this)" data-val="Law Enforcement cleared the property">Law Enforcement cleared property</button>
             <button class="chip" onclick="togClose(this)" data-val="all ProTech units cleared the scene">All units cleared</button>
           </div>
         </div>
@@ -862,7 +863,7 @@
           <button class="del-btn" onclick="removeSuspect(${s.id})">×</button>
         </div>
         <div class="g2">
-          <div class="field"><label>Description / name</label><input value="${s.desc}" placeholder="e.g. male in a mask" onchange="setSus(${s.id},'desc',this.value)"></div>
+          <div class="field"><label>Description / Name</label><input value="${s.desc}" placeholder="e.g. male in a mask" onchange="setSus(${s.id},'desc',this.value)"></div>
           <div class="field"><label>Clothing</label><input value="${s.clothing}" placeholder="e.g. white/orange jacket, blue pants, white shoes, duffel bag" onchange="setSus(${s.id},'clothing',this.value)"></div>
         </div>
         <div class="g2" style="margin-top:12px">
